@@ -91,31 +91,7 @@ export function MobileAirportPicker({
     }
   }, [open])
 
-  React.useEffect(() => {
-    if (open) {
-      const scrollY = window.scrollY
-      document.body.style.position = 'fixed'
-      document.body.style.top = `-${scrollY}px`
-      document.body.style.left = '0'
-      document.body.style.right = '0'
-    } else {
-      const scrollY = document.body.style.top
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.left = ''
-      document.body.style.right = ''
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1)
-      }
-    }
-    return () => {
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.left = ''
-      document.body.style.right = ''
-    }
-  }, [open])
-
+  
   const handleClose = () => {
     // Blur input to close keyboard
     inputRef.current?.blur()
@@ -161,11 +137,12 @@ export function MobileAirportPicker({
       {/* Backdrop */}
       <div
         className={cn(
-          "fixed inset-0 z-50 bg-black/50 transition-opacity duration-300",
+          "fixed inset-0 z-50 bg-black/50 transition-opacity duration-300 touch-none",
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
         style={{ opacity: open ? Math.max(0, 0.5 - dragY / 400) : 0 }}
         onClick={handleClose}
+        onTouchMove={(e) => e.preventDefault()}
       />
 
       {/* Sheet */}
