@@ -68,12 +68,21 @@ export const metadata: Metadata = {
     title: "Priority Flyers - Group Flight Booking Specialists",
     description:
       "Book group flight tickets with Priority Flyers. Specialized in group travel for 10+ passengers with access to 500+ airlines worldwide.",
+    images: [
+      {
+        url: "/og.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Priority Flyers - Group Flight Booking Specialists",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Priority Flyers - Group Flight Booking Specialists",
     description:
       "Book group flight tickets with Priority Flyers. Specialized in group travel for 10+ passengers with access to 500+ airlines worldwide.",
+    images: ["/og.jpg"],
   },
   robots: {
     index: true,
@@ -103,8 +112,10 @@ const jsonLd = {
   email: "info@priorityflyers.com",
   address: {
     "@type": "PostalAddress",
-    addressLocality: "San Francisco",
+    streetAddress: "5419 Palm Ave apt 11",
+    addressLocality: "Sacramento",
     addressRegion: "CA",
+    postalCode: "95841",
     addressCountry: "US",
   },
   sameAs: [],

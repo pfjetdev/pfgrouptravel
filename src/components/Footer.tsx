@@ -82,7 +82,7 @@ export function Footer() {
               <li>
                 <div className="inline-flex items-start gap-2 text-sm text-background/70">
                   <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                  <span>San Francisco, CA<br />United States</span>
+                  <span>5419 Palm Ave apt 11<br />Sacramento, CA 95841, USA</span>
                 </div>
               </li>
             </ul>

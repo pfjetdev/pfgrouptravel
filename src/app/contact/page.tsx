@@ -50,9 +50,9 @@ const contactInfo = [
   {
     icon: MapPin,
     title: "Office",
-    value: "San Francisco, CA",
+    value: "5419 Palm Ave apt 11",
     href: null,
-    description: "United States",
+    description: "Sacramento, CA 95841, USA",
   },
   {
     icon: Clock,
