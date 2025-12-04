@@ -91,7 +91,17 @@ export function MobileAirportPicker({
     }
   }, [open])
 
-  
+  React.useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [open])
+
   const handleClose = () => {
     // Blur input to close keyboard
     inputRef.current?.blur()
@@ -137,12 +147,11 @@ export function MobileAirportPicker({
       {/* Backdrop */}
       <div
         className={cn(
-          "fixed inset-0 z-50 bg-black/50 transition-opacity duration-300 touch-none",
+          "fixed inset-0 z-50 bg-black/50 transition-opacity duration-300",
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
         style={{ opacity: open ? Math.max(0, 0.5 - dragY / 400) : 0 }}
         onClick={handleClose}
-        onTouchMove={(e) => e.preventDefault()}
       />
 
       {/* Sheet */}
