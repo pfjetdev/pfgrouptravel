@@ -2,16 +2,9 @@
 
 import * as React from "react"
 import { Check, Search, Plane, X } from "lucide-react"
+import { createPortal } from "react-dom"
 
 import { cn } from "@/lib/utils"
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
 
 import airportsData from "@/data/airports.json"
@@ -38,10 +31,7 @@ interface MobileAirportPickerProps {
   variant?: "default" | "input"
 }
 
-// Helper to format airport for display and storage
 const formatAirport = (airport: Airport) => `${airport.iata} - ${airport.city}, ${airport.country}`
-
-// Helper to extract IATA code from formatted string
 const extractIata = (value: string) => value?.split(' - ')[0] || value
 
 export function MobileAirportPicker({
@@ -53,8 +43,14 @@ export function MobileAirportPicker({
 }: MobileAirportPickerProps) {
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState("")
+  const [mounted, setMounted] = React.useState(false)
+  const [dragY, setDragY] = React.useState(0)
+  const [isDragging, setIsDragging] = React.useState(false)
 
-  // Extract IATA code from value (handles both "BCN" and "BCN - Barcelona, Spain" formats)
+  const inputRef = React.useRef<HTMLInputElement>(null)
+  const sheetRef = React.useRef<HTMLDivElement>(null)
+  const dragStartY = React.useRef(0)
+
   const iataCode = extractIata(value)
 
   const selectedAirport = React.useMemo(
@@ -66,7 +62,6 @@ export function MobileAirportPicker({
     if (!search) {
       return airports.filter((a) => popularAirports.includes(a.iata))
     }
-
     const searchLower = search.toLowerCase()
     return airports
       .filter(
@@ -83,50 +78,148 @@ export function MobileAirportPicker({
     ? `${selectedAirport.city}, ${selectedAirport.iata}`
     : null
 
-  return (
-    <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>
-        {variant === "input" ? (
-          <button className="flex h-12 w-full items-center rounded-md border border-input bg-transparent px-3 py-1 text-left text-base shadow-sm transition-colors hover:bg-accent">
-            {displayValue ? (
-              <span className="text-foreground">{displayValue}</span>
-            ) : (
-              <span className="text-muted-foreground">{placeholder}</span>
-            )}
-          </button>
-        ) : (
-          <button className="w-full text-left">
-            {displayValue ? (
-              <p className="text-lg font-medium text-white">{displayValue}</p>
-            ) : (
-              <p className="text-lg text-slate-500">{placeholder}</p>
-            )}
-          </button>
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  React.useEffect(() => {
+    if (open && inputRef.current) {
+      setTimeout(() => inputRef.current?.focus(), 50)
+    }
+    if (open) {
+      setDragY(0)
+    }
+  }, [open])
+
+  React.useEffect(() => {
+    if (open) {
+      const scrollY = window.scrollY
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollY}px`
+      document.body.style.left = '0'
+      document.body.style.right = '0'
+    } else {
+      const scrollY = document.body.style.top
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.left = ''
+      document.body.style.right = ''
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1)
+      }
+    }
+    return () => {
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.left = ''
+      document.body.style.right = ''
+    }
+  }, [open])
+
+  const handleClose = () => {
+    // Blur input to close keyboard
+    inputRef.current?.blur()
+    document.activeElement instanceof HTMLElement && document.activeElement.blur()
+    setOpen(false)
+    setSearch("")
+    setDragY(0)
+  }
+
+  const handleSelect = (airport: Airport) => {
+    onChange(formatAirport(airport))
+    handleClose()
+  }
+
+  // Drag handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    dragStartY.current = e.touches[0].clientY
+    setIsDragging(true)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return
+    const currentY = e.touches[0].clientY
+    const diff = currentY - dragStartY.current
+    // Only allow dragging down
+    if (diff > 0) {
+      setDragY(diff)
+    }
+  }
+
+  const handleTouchEnd = () => {
+    setIsDragging(false)
+    // Close if dragged more than 100px
+    if (dragY > 100) {
+      handleClose()
+    } else {
+      setDragY(0)
+    }
+  }
+
+  const sheet = (
+    <>
+      {/* Backdrop */}
+      <div
+        className={cn(
+          "fixed inset-0 z-50 bg-black/50 transition-opacity duration-300",
+          open ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
-      </DrawerTrigger>
-      <DrawerContent className="max-h-[90vh]">
-        <DrawerHeader className="border-b pb-4">
-          <div className="flex items-center justify-between">
-            <DrawerTitle>{label}</DrawerTitle>
-            <DrawerClose asChild>
-              <button className="rounded-full p-1 hover:bg-muted">
-                <X className="h-5 w-5" />
-              </button>
-            </DrawerClose>
+        style={{ opacity: open ? Math.max(0, 0.5 - dragY / 400) : 0 }}
+        onClick={handleClose}
+      />
+
+      {/* Sheet */}
+      <div
+        ref={sheetRef}
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-50 h-[90%] bg-background rounded-t-2xl shadow-xl flex flex-col",
+          !isDragging && "transition-transform duration-300 ease-out",
+          !open && !isDragging && "translate-y-full"
+        )}
+        style={{
+          transform: open ? `translateY(${dragY}px)` : undefined,
+        }}
+      >
+        {/* Drag handle */}
+        <div
+          className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing touch-none"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className="w-10 h-1.5 bg-muted-foreground/30 rounded-full" />
+        </div>
+
+        {/* Header - also draggable */}
+        <div
+          className="px-4 pb-3 border-b touch-none"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold">{label}</h2>
+            <button
+              onClick={handleClose}
+              className="rounded-full p-1.5 hover:bg-muted transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          <div className="relative mt-3">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
+              ref={inputRef}
               placeholder="Search city or airport..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
-              autoFocus
             />
           </div>
-        </DrawerHeader>
+        </div>
 
-        <div className="overflow-y-auto p-4">
+        {/* Results */}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-3">
           <p className="mb-2 text-xs font-medium text-muted-foreground">
             {search ? "Results" : "Popular Airports"}
           </p>
@@ -134,19 +227,15 @@ export function MobileAirportPicker({
             {filteredAirports.map((airport) => (
               <button
                 key={airport.iata}
-                onClick={() => {
-                  onChange(formatAirport(airport))
-                  setOpen(false)
-                  setSearch("")
-                }}
+                onClick={() => handleSelect(airport)}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors",
+                  "flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors active:scale-[0.98]",
                   iataCode === airport.iata
                     ? "bg-primary/10"
-                    : "hover:bg-muted"
+                    : "hover:bg-muted active:bg-muted"
                 )}
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
                   <Plane className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -164,8 +253,36 @@ export function MobileAirportPicker({
               </button>
             ))}
           </div>
+          <div className="h-8" />
         </div>
-      </DrawerContent>
-    </Drawer>
+      </div>
+    </>
+  )
+
+  return (
+    <>
+      {variant === "input" ? (
+        <button
+          onClick={() => setOpen(true)}
+          className="flex h-12 w-full items-center rounded-md border border-input bg-transparent px-3 py-1 text-left text-base shadow-sm transition-colors hover:bg-accent"
+        >
+          {displayValue ? (
+            <span className="text-foreground">{displayValue}</span>
+          ) : (
+            <span className="text-muted-foreground">{placeholder}</span>
+          )}
+        </button>
+      ) : (
+        <button onClick={() => setOpen(true)} className="w-full text-left">
+          {displayValue ? (
+            <p className="text-lg font-medium text-white">{displayValue}</p>
+          ) : (
+            <p className="text-lg text-slate-500">{placeholder}</p>
+          )}
+        </button>
+      )}
+
+      {mounted && createPortal(sheet, document.body)}
+    </>
   )
 }
