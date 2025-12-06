@@ -9,6 +9,13 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
+import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
@@ -149,6 +156,135 @@ const countries = [
   { code: "ZW", name: "Zimbabwe", dial: "+263", flag: "🇿🇼", popular: false },
 ]
 
+// Hook to detect mobile devices
+function useIsMobile() {
+  const [isMobile, setIsMobile] = React.useState(false)
+
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  return isMobile
+}
+
+// Country list component used in both dropdown and drawer
+interface CountryListProps {
+  searchQuery: string
+  onSearchChange: (value: string) => void
+  selectedCountry: typeof countries[0]
+  onCountrySelect: (country: typeof countries[0]) => void
+  filteredCountries: typeof countries
+  popularCountries: typeof countries
+  otherCountries: typeof countries
+  variant?: "dropdown" | "drawer"
+}
+
+function CountryList({
+  searchQuery,
+  onSearchChange,
+  selectedCountry,
+  onCountrySelect,
+  filteredCountries,
+  popularCountries,
+  otherCountries,
+  variant = "dropdown",
+}: CountryListProps) {
+  const ItemComponent = variant === "dropdown" ? DropdownMenuItem : "div"
+
+  return (
+    <>
+      <div className={cn(
+        "sticky top-0 bg-background border-b",
+        variant === "dropdown" ? "p-2" : "p-4"
+      )}>
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search country..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-9 h-9"
+            autoFocus={variant === "dropdown"}
+          />
+        </div>
+      </div>
+      <div className={cn(
+        "overflow-y-auto",
+        variant === "dropdown" ? "max-h-[300px] p-1" : "flex-1 p-2"
+      )}>
+        {popularCountries.length > 0 && (
+          <>
+            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+              Popular
+            </div>
+            {popularCountries.map((country) => (
+              <ItemComponent
+                key={country.code}
+                onClick={() => onCountrySelect(country)}
+                className={cn(
+                  "flex items-center justify-between cursor-pointer py-2.5 rounded-md px-2",
+                  selectedCountry.code === country.code && "bg-accent",
+                  variant === "drawer" && "hover:bg-accent transition-colors"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{country.flag}</span>
+                  <span className="text-sm font-medium">{country.name}</span>
+                </div>
+                <span className="text-sm text-muted-foreground font-mono">
+                  {country.dial}
+                </span>
+              </ItemComponent>
+            ))}
+            {otherCountries.length > 0 && variant === "dropdown" && <DropdownMenuSeparator />}
+            {otherCountries.length > 0 && variant === "drawer" && <div className="my-2 border-t" />}
+          </>
+        )}
+        {otherCountries.length > 0 && (
+          <>
+            {!searchQuery && (
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                All Countries
+              </div>
+            )}
+            {otherCountries.map((country) => (
+              <ItemComponent
+                key={country.code}
+                onClick={() => onCountrySelect(country)}
+                className={cn(
+                  "flex items-center justify-between cursor-pointer py-2.5 rounded-md px-2",
+                  selectedCountry.code === country.code && "bg-accent",
+                  variant === "drawer" && "hover:bg-accent transition-colors"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{country.flag}</span>
+                  <span className="text-sm font-medium">{country.name}</span>
+                </div>
+                <span className="text-sm text-muted-foreground font-mono">
+                  {country.dial}
+                </span>
+              </ItemComponent>
+            ))}
+          </>
+        )}
+        {filteredCountries.length === 0 && (
+          <div className="py-6 text-center text-sm text-muted-foreground">
+            No countries found
+          </div>
+        )}
+      </div>
+    </>
+  )
+}
+
 export interface PhoneInputProps
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
@@ -160,6 +296,7 @@ export interface PhoneInputProps
 
 const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
   ({ className, onChange, value = "", ...props }, ref) => {
+    const isMobile = useIsMobile()
     const [selectedCountry, setSelectedCountry] = React.useState(
       countries.find((c) => c.code === "US") || countries[0]
     )
@@ -249,96 +386,61 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
     const popularCountries = filteredCountries.filter((c) => c.popular)
     const otherCountries = filteredCountries.filter((c) => !c.popular)
 
+    const triggerButton = (
+      <InputGroupButton variant="ghost" size="sm" className="gap-1.5 px-3">
+        <span className="text-xl leading-none">
+          {selectedCountry.flag}
+        </span>
+        <span className="text-sm font-medium text-foreground">
+          {selectedCountry.dial}
+        </span>
+        <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+      </InputGroupButton>
+    )
+
     return (
       <InputGroup className={className}>
         <InputGroupAddon>
-          <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-            <DropdownMenuTrigger asChild>
-              <InputGroupButton variant="ghost" size="sm" className="gap-1.5 px-3">
-                <span className="text-xl leading-none">
-                  {selectedCountry.flag}
-                </span>
-                <span className="text-sm font-medium text-foreground">
-                  {selectedCountry.dial}
-                </span>
-                <ChevronDown className="h-3.5 w-3.5 opacity-50" />
-              </InputGroupButton>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[320px] p-0">
-              <div className="sticky top-0 bg-background p-2 border-b">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search country..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 h-9"
-                    autoFocus
-                  />
-                </div>
-              </div>
-              <div className="max-h-[300px] overflow-y-auto p-1">
-                {popularCountries.length > 0 && (
-                  <>
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                      Popular
-                    </div>
-                    {popularCountries.map((country) => (
-                      <DropdownMenuItem
-                        key={country.code}
-                        onClick={() => handleCountryChange(country)}
-                        className={cn(
-                          "flex items-center justify-between cursor-pointer py-2.5",
-                          selectedCountry.code === country.code && "bg-accent"
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-xl">{country.flag}</span>
-                          <span className="text-sm font-medium">{country.name}</span>
-                        </div>
-                        <span className="text-sm text-muted-foreground font-mono">
-                          {country.dial}
-                        </span>
-                      </DropdownMenuItem>
-                    ))}
-                    {otherCountries.length > 0 && <DropdownMenuSeparator />}
-                  </>
-                )}
-                {otherCountries.length > 0 && (
-                  <>
-                    {!searchQuery && (
-                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                        All Countries
-                      </div>
-                    )}
-                    {otherCountries.map((country) => (
-                      <DropdownMenuItem
-                        key={country.code}
-                        onClick={() => handleCountryChange(country)}
-                        className={cn(
-                          "flex items-center justify-between cursor-pointer py-2.5",
-                          selectedCountry.code === country.code && "bg-accent"
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-xl">{country.flag}</span>
-                          <span className="text-sm font-medium">{country.name}</span>
-                        </div>
-                        <span className="text-sm text-muted-foreground font-mono">
-                          {country.dial}
-                        </span>
-                      </DropdownMenuItem>
-                    ))}
-                  </>
-                )}
-                {filteredCountries.length === 0 && (
-                  <div className="py-6 text-center text-sm text-muted-foreground">
-                    No countries found
-                  </div>
-                )}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {isMobile ? (
+            <Drawer open={isOpen} onOpenChange={setIsOpen}>
+              <DrawerTrigger asChild>
+                {triggerButton}
+              </DrawerTrigger>
+              <DrawerContent className="max-h-[85vh]">
+                <DrawerHeader>
+                  <DrawerTitle>Select Country</DrawerTitle>
+                </DrawerHeader>
+                <CountryList
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  selectedCountry={selectedCountry}
+                  onCountrySelect={handleCountryChange}
+                  filteredCountries={filteredCountries}
+                  popularCountries={popularCountries}
+                  otherCountries={otherCountries}
+                  variant="drawer"
+                />
+              </DrawerContent>
+            </Drawer>
+          ) : (
+            <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+              <DropdownMenuTrigger asChild>
+                {triggerButton}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[320px] p-0">
+                <CountryList
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  selectedCountry={selectedCountry}
+                  onCountrySelect={handleCountryChange}
+                  filteredCountries={filteredCountries}
+                  popularCountries={popularCountries}
+                  otherCountries={otherCountries}
+                  variant="dropdown"
+                />
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </InputGroupAddon>
         <InputGroupInput
           ref={ref}
