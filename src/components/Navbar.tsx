@@ -15,6 +15,7 @@ import {
 
 const navItems = [
   { title: "Home", href: "/" },
+  { title: "For Business", href: "/b2b" },
   { title: "News", href: "/news" },
   { title: "Practical Information", href: "/practical-information" },
   { title: "Contact", href: "/contact" },
@@ -60,7 +61,11 @@ export function Navbar() {
               <Link
                 key={item.title}
                 href={item.href}
-                className="px-4 py-2 text-sm font-medium text-foreground/80 transition-colors hover:text-primary"
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  item.title === "For Business"
+                    ? "text-red-600 hover:text-red-700"
+                    : "text-foreground/80 hover:text-primary"
+                }`}
               >
                 {item.title}
               </Link>
@@ -119,7 +124,11 @@ export function Navbar() {
                     key={item.title}
                     href={item.href}
                     onClick={() => setIsOpen(false)}
-                    className="px-6 py-4 text-base font-medium text-foreground hover:bg-muted transition-colors"
+                    className={`px-6 py-4 text-base font-medium hover:bg-muted transition-colors ${
+                      item.title === "For Business"
+                        ? "text-red-600"
+                        : "text-foreground"
+                    }`}
                   >
                     {item.title}
                   </Link>

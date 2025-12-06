@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { PhoneInput } from "@/components/ui/phone-input"
 import { Badge } from "@/components/ui/badge"
 import {
   Select,
@@ -230,13 +231,12 @@ export default function ContactPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input
+                    <PhoneInput
                       id="phone"
-                      type="tel"
-                      placeholder="+1 (555) 000-0000"
+                      placeholder="Enter phone number"
                       required
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      onChange={(value) => setFormData({ ...formData, phone: value || '' })}
                     />
                   </div>
                 </div>

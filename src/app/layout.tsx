@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -68,21 +69,14 @@ export const metadata: Metadata = {
     title: "Priority Flyers - Group Flight Booking Specialists",
     description:
       "Book group flight tickets with Priority Flyers. Specialized in group travel for 10+ passengers with access to 500+ airlines worldwide.",
-    images: [
-      {
-        url: "/og.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Priority Flyers - Group Flight Booking Specialists",
-      },
-    ],
+    // Images are automatically handled by opengraph-image.tsx
   },
   twitter: {
     card: "summary_large_image",
     title: "Priority Flyers - Group Flight Booking Specialists",
     description:
       "Book group flight tickets with Priority Flyers. Specialized in group travel for 10+ passengers with access to 500+ airlines worldwide.",
-    images: ["/og.jpg"],
+    // Images are automatically handled by twitter-image.tsx
   },
   robots: {
     index: true,
@@ -152,6 +146,7 @@ export default function RootLayout({
         <Navbar />
         <main>{children}</main>
         <Footer />
+        <Toaster />
       </body>
     </html>
   );

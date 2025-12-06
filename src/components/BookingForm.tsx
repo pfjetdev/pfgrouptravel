@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { PhoneInput } from "@/components/ui/phone-input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   Select,
@@ -69,6 +70,52 @@ export function BookingForm() {
     phone: "",
     email: "",
   })
+
+  // Listen for destination selection from destination cards
+  React.useEffect(() => {
+    const handleDestinationSelected = async (event: Event) => {
+      const customEvent = event as CustomEvent
+      const { city } = customEvent.detail
+
+      // Load airports data and find matching airport by city
+      try {
+        const airportsModule = await import('@/data/airports.json')
+        const airports = airportsModule.default
+
+        // Find airport by city name
+        const airport = airports.find((a: { city: string }) =>
+          a.city.toLowerCase() === city.toLowerCase()
+        )
+
+        if (airport) {
+          // Set the IATA code (e.g., "JFK" for New York)
+          setFlightData(prev => ({
+            ...prev,
+            to: airport.iata
+          }))
+        } else {
+          // Fallback: just set the city name
+          setFlightData(prev => ({
+            ...prev,
+            to: city
+          }))
+        }
+      } catch (error) {
+        console.error('Error loading airports:', error)
+        // Fallback: set city name
+        setFlightData(prev => ({
+          ...prev,
+          to: city
+        }))
+      }
+    }
+
+    window.addEventListener('destinationSelected', handleDestinationSelected)
+
+    return () => {
+      window.removeEventListener('destinationSelected', handleDestinationSelected)
+    }
+  }, [])
 
   const handleNext = async () => {
     if (step === 1) {
@@ -164,7 +211,11 @@ export function BookingForm() {
   }
 
   return (
-    <Card className="w-full max-w-md bg-white/95 backdrop-blur shadow-2xl border-0">
+    <Card
+      id="booking-form"
+      data-booking-form
+      className="w-full max-w-md bg-white/95 backdrop-blur shadow-2xl border-0 scroll-mt-24"
+    >
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-xl">
           <Plane className="h-5 w-5 text-primary" />
@@ -323,12 +374,11 @@ export function BookingForm() {
 
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number</Label>
-              <Input
+              <PhoneInput
                 id="phone"
-                type="tel"
-                placeholder="+1 (555) 000-0000"
+                placeholder="Enter phone number"
                 value={contactData.phone}
-                onChange={(e) => setContactData({ ...contactData, phone: e.target.value })}
+                onChange={(value) => setContactData({ ...contactData, phone: value || '' })}
               />
             </div>
 

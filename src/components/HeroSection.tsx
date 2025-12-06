@@ -54,7 +54,7 @@ export function HeroSection() {
 
           {/* Mobile Hero Content */}
           <div className="flex flex-col md:hidden">
-            <h1 className="text-center text-3xl font-bold tracking-tight text-foreground">
+            <h1 className="text-center text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
               Fly Together,
               <br />
               <span className="text-primary">Save Together</span>

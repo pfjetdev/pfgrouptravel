@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { PhoneInput } from "@/components/ui/phone-input"
 import {
   Select,
   SelectContent,
@@ -488,14 +489,13 @@ function MultiCityContent() {
 
                   <div className="space-y-2">
                     <Label htmlFor="m-phone">Phone Number</Label>
-                    <Input
+                    <PhoneInput
                       id="m-phone"
-                      type="tel"
-                      placeholder="+1 (555) 000-0000"
+                      placeholder="Enter phone number"
                       className="rounded-xl"
                       value={contactData.phone}
-                      onChange={(e) =>
-                        setContactData({ ...contactData, phone: e.target.value })
+                      onChange={(value) =>
+                        setContactData({ ...contactData, phone: value || '' })
                       }
                     />
                   </div>
@@ -591,13 +591,12 @@ function MultiCityContent() {
 
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input
+                    <PhoneInput
                       id="phone"
-                      type="tel"
-                      placeholder="+1 (555) 000-0000"
+                      placeholder="Enter phone number"
                       value={contactData.phone}
-                      onChange={(e) =>
-                        setContactData({ ...contactData, phone: e.target.value })
+                      onChange={(value) =>
+                        setContactData({ ...contactData, phone: value || '' })
                       }
                     />
                   </div>

@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server'
-import { supabase, ContactRequest } from '@/lib/supabase'
-import { sendTelegramMessage, formatContactMessage } from '@/lib/telegram'
+import { supabase, EnterpriseInquiry } from '@/lib/supabase'
+import { sendTelegramMessage, formatEnterpriseMessage } from '@/lib/telegram'
 
 export async function POST(request: Request) {
   try {
-    const body: ContactRequest = await request.json()
+    const body: EnterpriseInquiry = await request.json()
 
     // Validate required fields
-    if (!body.first_name || !body.last_name || !body.email ||
-        !body.phone || !body.inquiry_type || !body.message) {
+    if (!body.company_name || !body.contact_name || !body.email ||
+        !body.phone || !body.industry_type || !body.message) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -17,14 +17,15 @@ export async function POST(request: Request) {
 
     // Insert into Supabase
     const { data, error } = await supabase
-      .from('contact_requests')
+      .from('enterprise_inquiries')
       .insert([{
-        first_name: body.first_name,
-        last_name: body.last_name,
+        company_name: body.company_name,
+        contact_name: body.contact_name,
         email: body.email,
         phone: body.phone,
-        inquiry_type: body.inquiry_type,
-        group_size: body.group_size || null,
+        industry_type: body.industry_type,
+        annual_travel_budget: body.annual_travel_budget || null,
+        number_of_employees: body.number_of_employees || null,
         message: body.message,
         status: 'new'
       }])
@@ -34,19 +35,19 @@ export async function POST(request: Request) {
     if (error) {
       console.error('Supabase error:', error)
       return NextResponse.json(
-        { error: 'Failed to save contact request' },
+        { error: 'Failed to save enterprise inquiry' },
         { status: 500 }
       )
     }
 
     // Send Telegram notification (non-blocking)
-    sendTelegramMessage(formatContactMessage(body)).catch(err =>
+    sendTelegramMessage(formatEnterpriseMessage(body)).catch(err =>
       console.error('Telegram notification failed:', err)
     )
 
     return NextResponse.json({
       success: true,
-      message: 'Contact request submitted successfully',
+      message: 'Enterprise inquiry submitted successfully',
       id: data.id
     })
   } catch (error) {

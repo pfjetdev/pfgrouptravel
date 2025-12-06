@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabase, BookingRequest } from '@/lib/supabase'
+import { sendTelegramMessage, formatBookingMessage } from '@/lib/telegram'
 
 export async function POST(request: Request) {
   try {
@@ -41,6 +42,11 @@ export async function POST(request: Request) {
         { status: 500 }
       )
     }
+
+    // Send Telegram notification (non-blocking)
+    sendTelegramMessage(formatBookingMessage(body)).catch(err =>
+      console.error('Telegram notification failed:', err)
+    )
 
     return NextResponse.json({
       success: true,

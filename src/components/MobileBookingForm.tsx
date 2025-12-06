@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { PhoneInput } from "@/components/ui/phone-input"
 import { MobileAirportPicker } from "@/components/MobileAirportPicker"
 import { MobilePassengerPicker, MobileClassPicker, MobileDateRangePicker, MobileSingleDatePicker } from "@/components/MobilePickers"
 import {
@@ -54,6 +55,52 @@ export function MobileBookingForm() {
     phone: "",
     email: "",
   })
+
+  // Listen for destination selection from destination cards
+  React.useEffect(() => {
+    const handleDestinationSelected = async (event: Event) => {
+      const customEvent = event as CustomEvent
+      const { city } = customEvent.detail
+
+      // Load airports data and find matching airport by city
+      try {
+        const airportsModule = await import('@/data/airports.json')
+        const airports = airportsModule.default
+
+        // Find airport by city name
+        const airport = airports.find((a: { city: string }) =>
+          a.city.toLowerCase() === city.toLowerCase()
+        )
+
+        if (airport) {
+          // Set the IATA code (e.g., "JFK" for New York)
+          setFlightData(prev => ({
+            ...prev,
+            to: airport.iata
+          }))
+        } else {
+          // Fallback: just set the city name
+          setFlightData(prev => ({
+            ...prev,
+            to: city
+          }))
+        }
+      } catch (error) {
+        console.error('Error loading airports:', error)
+        // Fallback: set city name
+        setFlightData(prev => ({
+          ...prev,
+          to: city
+        }))
+      }
+    }
+
+    window.addEventListener('destinationSelected', handleDestinationSelected)
+
+    return () => {
+      window.removeEventListener('destinationSelected', handleDestinationSelected)
+    }
+  }, [])
 
   const handleNext = async () => {
     if (step === 1) {
@@ -152,7 +199,11 @@ export function MobileBookingForm() {
   ]
 
   return (
-    <div className="w-full space-y-4">
+    <div
+      id="booking-form"
+      data-booking-form
+      className="w-full space-y-4 scroll-mt-24"
+    >
       {step === 1 ? (
         <>
           {/* Trip Type Pills */}
@@ -290,12 +341,11 @@ export function MobileBookingForm() {
 
             <div className="space-y-2">
               <Label htmlFor="m-phone">Phone Number</Label>
-              <Input
+              <PhoneInput
                 id="m-phone"
-                type="tel"
-                placeholder="+1 (555) 000-0000"
+                placeholder="Enter phone number"
                 value={contactData.phone}
-                onChange={(e) => setContactData({ ...contactData, phone: e.target.value })}
+                onChange={(value) => setContactData({ ...contactData, phone: value || '' })}
                 className="rounded-xl"
               />
             </div>

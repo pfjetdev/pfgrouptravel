@@ -85,3 +85,17 @@ export interface News {
   is_active: boolean
   sort_order: number
 }
+
+export interface EnterpriseInquiry {
+  id?: string
+  created_at?: string
+  company_name: string
+  contact_name: string
+  email: string
+  phone: string
+  industry_type: string
+  annual_travel_budget?: string | null
+  number_of_employees?: string | null
+  message: string
+  status?: 'new' | 'contacted' | 'qualified' | 'converted' | 'closed'
+}

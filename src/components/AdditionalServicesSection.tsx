@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { PhoneInput } from "@/components/ui/phone-input"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AirportCombobox } from "@/components/AirportCombobox"
@@ -381,11 +382,10 @@ function ServiceForm() {
 
             <div className="space-y-1.5">
               <Label className="text-sm">Phone Number</Label>
-              <Input
-                type="tel"
-                placeholder="+1 (555) 000-0000"
+              <PhoneInput
+                placeholder="Enter phone number"
                 value={contactData.phone}
-                onChange={(e) => setContactData({ ...contactData, phone: e.target.value })}
+                onChange={(value) => setContactData({ ...contactData, phone: value || '' })}
               />
             </div>
 
